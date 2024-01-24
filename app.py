@@ -7,7 +7,6 @@ from PIL import Image
 
 idk.sdk_opts.image_thumbnail_size = 265
 idk.sdk_opts.image_thumbnail_quality = 80
-idk.sdk_opts.granular = True
 
 
 custom_css = """
