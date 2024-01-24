@@ -46,7 +46,7 @@ def generate_iscc(file):
         thumbnail = Image.open(io.BytesIO(data))
     metadata = imeta.dict(exclude_unset=False, by_alias=True)
     if metadata.get("thumbnail"):
-        del metadata['thumbnail']
+        del metadata["thumbnail"]
     return imeta.iscc, thumbnail, metadata
 
 
@@ -72,31 +72,48 @@ def generate_text_code(text, chunk_size):
         end = start + size
         chunks.append(no_nl(cleaned[start:end]))
         start = end
-    result = [(chunk, f"{size}:{feat}") for chunk, size, feat in zip(chunks, sizes, features)]
+    result = [
+        (chunk, f"{size}:{feat}") for chunk, size, feat in zip(chunks, sizes, features)
+    ]
     idk.sdk_opts.text_avg_chunk_size = original_chunk_size
     return result
 
 
-with gr.Blocks(title="ISCC-CODE") as demo_generate:
-    gr.Markdown("""
+####################################################################################################
+# TAB ISCC-CODE                                                                                    #
+####################################################################################################
+
+with gr.Blocks() as demo_generate:
+    gr.Markdown(
+        """
     ## 🌟 ISCC-CODE Generator - The DNA of digital content
-    """)
+    """
+    )
     with gr.Row():
         with gr.Column(scale=2):
             in_file = gr.File(label="Media File")
         with gr.Column(scale=1):
-            out_thumbnail = gr.Image(label="Extracted Thumbnail", elem_classes=["fixed-height"])
+            out_thumbnail = gr.Image(
+                label="Extracted Thumbnail", elem_classes=["fixed-height"]
+            )
     with gr.Row():
         out_iscc = gr.Text(label="ISCC-CODE", show_copy_button=True)
     with gr.Row():
         out_meta = gr.Json(label="Metadata")
-    in_file.change(generate_iscc, inputs=[in_file], outputs=[out_iscc, out_thumbnail, out_meta])
+    in_file.change(
+        generate_iscc, inputs=[in_file], outputs=[out_iscc, out_thumbnail, out_meta]
+    )
 
+####################################################################################################
+# TAB ENCODING                                                                                     #
+####################################################################################################
 
-with gr.Blocks("ENCODING") as demo_decode:
-    gr.Markdown("""
+with gr.Blocks() as demo_decode:
+    gr.Markdown(
+        """
     ## 🌟 A Codec for Self-Describing Compact Binary Codes
-    """)
+    """
+    )
     with gr.Row():
         with gr.Column():
             in_iscc = gr.Text(
@@ -139,40 +156,57 @@ with gr.Blocks("ENCODING") as demo_decode:
                 info="BASE58-BTC",
                 show_copy_button=True,
             )
-    in_iscc.change(explain_iscc, inputs=[in_iscc], outputs=[
-        out_canonical,
-        out_human,
-        out_decomposed,
-        out_multiformat,
-    ])
+    in_iscc.change(
+        explain_iscc,
+        inputs=[in_iscc],
+        outputs=[
+            out_canonical,
+            out_human,
+            out_decomposed,
+            out_multiformat,
+        ],
+    )
 
-with gr.Blocks(title="CHUNKING") as demo_text_code:
-    gr.Markdown("""
+####################################################################################################
+# CHUNKING                                                                                         #
+####################################################################################################
+
+with gr.Blocks() as demo_chunking:
+    gr.Markdown(
+        """
     ## 🌟 Content Defined Chunking for Shift-Resistant Text and Data Segmentation
-    """)
+    """
+    )
     with gr.Row():
         with gr.Column():
             in_text = gr.Textbox(label="Text Input", lines=8, autofocus=True)
             in_chunksize = gr.Slider(
                 label="Chunk Size",
                 info="AVERAGE NUMBER OF CHARACTERS PER CHUNK",
-                minimum=32, maximum=2048, step=32,
-                value=64)
+                minimum=32,
+                maximum=2048,
+                step=32,
+                value=64,
+            )
 
         out_text = gr.HighlightedText(
             label="Chunked Text Output",
             interactive=False,
             elem_id="chunked-text",
         )
-    in_text.change(generate_text_code, inputs=[in_text, in_chunksize], outputs=[out_text])
-    in_chunksize.change(generate_text_code, inputs=[in_text, in_chunksize], outputs=[out_text])
+    in_text.change(
+        generate_text_code, inputs=[in_text, in_chunksize], outputs=[out_text]
+    )
+    in_chunksize.change(
+        generate_text_code, inputs=[in_text, in_chunksize], outputs=[out_text]
+    )
 
 demo = gr.TabbedInterface(
     title="▶️ ISCC Playground",
-    interface_list=[demo_generate, demo_decode, demo_text_code],
+    interface_list=[demo_generate, demo_decode, demo_chunking],
     tab_names=["ISCC-CODE", "ENCODING", "CHUNKING"],
     css=custom_css,
 )
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     demo.launch()
