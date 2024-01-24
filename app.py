@@ -59,7 +59,7 @@ def explain_iscc(code):
     return canonical, human, decomposed, multiformat
 
 
-def generate_text_code(text, chunk_size):
+def chunk_text(text, chunk_size):
     original_chunk_size = idk.sdk_opts.text_avg_chunk_size
     idk.sdk_opts.text_avg_chunk_size = chunk_size
     cleaned = ic.text_clean(text)
@@ -86,7 +86,7 @@ def generate_text_code(text, chunk_size):
 with gr.Blocks() as demo_generate:
     gr.Markdown(
         """
-    ## 🌟 ISCC-CODE Generator - The DNA of digital content
+    ## 🌟 ISCC-CODE Generator - The DNA of Digital Content
     """
     )
     with gr.Row():
@@ -194,12 +194,8 @@ with gr.Blocks() as demo_chunking:
             interactive=False,
             elem_id="chunked-text",
         )
-    in_text.change(
-        generate_text_code, inputs=[in_text, in_chunksize], outputs=[out_text]
-    )
-    in_chunksize.change(
-        generate_text_code, inputs=[in_text, in_chunksize], outputs=[out_text]
-    )
+    in_text.change(chunk_text, inputs=[in_text, in_chunksize], outputs=[out_text])
+    in_chunksize.change(chunk_text, inputs=[in_text, in_chunksize], outputs=[out_text])
 
 demo = gr.TabbedInterface(
     title="▶️ ISCC Playground",
