@@ -43,7 +43,7 @@ def generate_iscc(file):
 with gr.Blocks(title="ISCC Generator", css=custom_css) as demo:
     gr.Markdown("## ⚙️ ISCC Generator")
     with gr.Row():
-        in_file = gr.File(label="Media File")
+        in_file = gr.File(label="Media File", elem_classes=["fixed-height"])
     with gr.Row():
         out_iscc = gr.Text(
             label="ISCC",
