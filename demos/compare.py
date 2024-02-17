@@ -135,7 +135,8 @@ with gr.Blocks(css=custom_css) as demo:
                 elem_id="examples-a",
             )
 
-            out_iscc_a = gr.Text(label="ISCC")
+            out_iscc_a = gr.Text(label="ISCC", show_copy_button=True)
+
             with gr.Accordion(label="ISCC Metadata", open=False):
                 out_meta_a = gr.Code(language="json", label="JSON-LD")
 
@@ -164,7 +165,7 @@ with gr.Blocks(css=custom_css) as demo:
                 elem_id="examples-b",
             )
 
-            out_iscc_b = gr.Text(label="ISCC")
+            out_iscc_b = gr.Text(label="ISCC", show_copy_button=True)
             with gr.Accordion(label="ISCC Metadata", open=False):
                 out_meta_b = gr.Code(language="json", label="JSON-LD")
 
