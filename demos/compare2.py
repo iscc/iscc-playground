@@ -22,8 +22,13 @@ IMAGES2 = HERE / "images2"
 
 
 custom_css = """
-.fixed-height img {
+.fixed-height {
     height: 240px;  /* Fixed height */
+    object-fit: contain;  /* Scale the image to fit within the element */
+}
+
+#examples-a, #examples-b {
+    height: 140px;  /* Fixed height */
     object-fit: contain;  /* Scale the image to fit within the element */
 }
 """
@@ -105,9 +110,12 @@ def similarity_plot(sim_data):
 
 with gr.Blocks(css=custom_css) as demo:
     gr.Markdown("## 🖼️ ISCC Similarity Comparison")
+
     with gr.Row(variant="default", equal_height=True):
         with gr.Column(variant="compact"):
-            in_file_a = gr.File(label="Media File A")
+            in_file_a = gr.File(
+                label="Media File A", type="filepath", elem_classes=["fixed-height"]
+            )
             out_thumb_a = gr.Image(
                 label="Extracted Thumbnail",
                 visible=False,
@@ -117,10 +125,15 @@ with gr.Blocks(css=custom_css) as demo:
                 show_download_button=False,
                 sources=["upload"],
             )
+
+            # Proxy component to patch image example selection -> gr.File
+            dumy_image_a = gr.Image(visible=False, type="filepath", height=240)
+
             gr.Examples(
                 examples=IMAGES1.as_posix(),
                 cache_examples=False,
-                inputs=[in_file_a],
+                inputs=[dumy_image_a],
+                elem_id="examples-a",
             )
 
             out_iscc_a = gr.Text(label="ISCC")
@@ -128,7 +141,10 @@ with gr.Blocks(css=custom_css) as demo:
                 out_meta_a = gr.Code(language="json", label="JSON-LD")
 
         with gr.Column(variant="compact"):
-            in_file_b = gr.File(label="Media File B")
+            in_file_b = gr.File(
+                label="Media File B", type="filepath", elem_classes=["fixed-height"]
+            )
+
             out_thumb_b = gr.Image(
                 label="Extracted Thumbnail",
                 visible=False,
@@ -138,11 +154,17 @@ with gr.Blocks(css=custom_css) as demo:
                 show_download_button=False,
                 sources=["upload"],
             )
+
+            # Proxy component to patch image example selection -> gr.File
+            dumy_image_b = gr.Image(visible=False, type="filepath", height=240)
+
             gr.Examples(
                 examples=IMAGES2.as_posix(),
                 cache_examples=False,
-                inputs=[in_file_b],
+                inputs=[dumy_image_b],
+                elem_id="examples-b",
             )
+
             out_iscc_b = gr.Text(label="ISCC")
             with gr.Accordion(label="ISCC Metadata", open=False):
                 out_meta_b = gr.Code(language="json", label="JSON-LD")
@@ -152,7 +174,18 @@ with gr.Blocks(css=custom_css) as demo:
             label="Approximate ISCC-UNIT Similarities", container=False
         )
 
+    def rewrite_uri(filepath, sample_set):
+        # type: (str, str) -> str
+        """Rewrites temporary image URI to original sample URI"""
+        if filepath:
+            inpath = Path(filepath)
+            outpath = HERE / f"{sample_set}/{inpath.name.replace('jpeg', 'jpg')}"
+
+            log.info(filepath)
+            return outpath.as_posix()
+
     def process_upload(filepath, suffix):
+        # type: (str, str) -> dict
         """Generate extended ISCC with experimental Semantic Code (for images)"""
 
         # Map to active component group
@@ -201,34 +234,53 @@ with gr.Blocks(css=custom_css) as demo:
         lambda file: process_upload(file, "a"),
         inputs=[in_file_a],
         outputs=[in_file_a, out_thumb_a, out_iscc_a, out_meta_a],
+        show_progress="full",
     )
     in_file_b.change(
         lambda file: process_upload(file, "b"),
         inputs=[in_file_b],
         outputs=[in_file_b, out_thumb_b, out_iscc_b, out_meta_b],
+        show_progress="full",
     )
     out_thumb_a.clear(
-        lambda _: (gr.File(visible=True), gr.Image(visible=False), "", ""),
-        # Adjusting for "a" components
+        lambda: (gr.File(visible=True), gr.Image(visible=False), "", ""),
         inputs=[],
         outputs=[in_file_a, out_thumb_a, out_iscc_a, out_meta_a],
         show_progress="hidden",
     )
 
     out_thumb_b.clear(
-        lambda _: (gr.File(visible=True), gr.Image(visible=False), "", ""),
-        # Adjusting for "b" components
+        lambda: (gr.File(visible=True), gr.Image(visible=False), "", ""),
         inputs=[],
         outputs=[in_file_b, out_thumb_b, out_iscc_b, out_meta_b],
         show_progress="hidden",
     )
 
     out_iscc_a.change(
-        iscc_compare, inputs=[out_iscc_a, out_iscc_b], outputs=[out_compare]
+        iscc_compare,
+        inputs=[out_iscc_a, out_iscc_b],
+        outputs=[out_compare],
+        show_progress="hidden",
     )
 
     out_iscc_b.change(
-        iscc_compare, inputs=[out_iscc_a, out_iscc_b], outputs=[out_compare]
+        iscc_compare,
+        inputs=[out_iscc_a, out_iscc_b],
+        outputs=[out_compare],
+        show_progress="hidden",
+    )
+
+    dumy_image_a.change(
+        lambda file: rewrite_uri(file, "images1"),
+        inputs=[dumy_image_a],
+        outputs=[in_file_a],
+        show_progress="hidden",
+    )
+    dumy_image_b.change(
+        lambda file: rewrite_uri(file, "images2"),
+        inputs=[dumy_image_b],
+        outputs=[in_file_b],
+        show_progress="hidden",
     )
 
 
