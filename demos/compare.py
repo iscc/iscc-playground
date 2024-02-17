@@ -1,62 +1,49 @@
-# -*- coding: utf-8 -*-
+import base64
+import io
 from loguru import logger as log
-import pandas as pd
+from pathlib import Path
 import gradio as gr
-import plotly.graph_objects as go
+from PIL import Image
 import iscc_core as ic
 import iscc_sdk as idk
 import iscc_sci as sci
-import pathlib
+import plotly.graph_objects as go
+import pandas as pd
 
 
 idk.sdk_opts.image_thumbnail_size = 265
 idk.sdk_opts.image_thumbnail_quality = 80
 
 
-HERE = pathlib.Path(__file__).parent.absolute()
+HERE = Path(__file__).parent.absolute()
 IMAGES1 = HERE / "images1"
 IMAGES2 = HERE / "images2"
 
 
-def generate_iscc_semantic(filepath):
-    """Generate an ISCC Semantic Image-Code"""
-    # Standard ISCC-CODE
-    iscc_obj = idk.code_iscc(filepath)
-    iscc_code = iscc_obj.iscc
+custom_css = """
+.fixed-height {
+    height: 240px;  /* Fixed height */
+    object-fit: contain;  /* Scale the image to fit within the element */
+}
 
-    # Semantic Image-Code
-    sci_code = sci.code_image_semantic(filepath, bits=64)["iscc"]
-
-    # Combine
-    units = ic.iscc_decompose(iscc_code)
-    units.append(sci_code)
-    iscc_code = ic.gen_iscc_code(units)["iscc"]
-    iscc_obj.iscc = iscc_code
-    details = iscc_obj.dict(exclude_unset=False, by_alias=True)
-
-    # Remove Thumbnail - Too much noise for UI
-    try:
-        del details["thumbnail"]
-    except KeyError:
-        pass
-
-    return iscc_code, details
+#examples-a, #examples-b {
+    height: 140px;  /* Fixed height */
+    object-fit: contain;  /* Scale the image to fit within the element */
+}
+"""
 
 
-def compare(iscc_a, iscc_b):
-    # type: (str, str) -> dict
-    """Compare two ISCCs"""
-    dist_data = ic.iscc_compare(iscc_a, iscc_b)
-    sim_data = dist_to_sim(dist_data, dim=64)
-    sim_plot = similarity_plot(sim_data)
-    return sim_plot
-
-
-def hamming_to_cosine(hamming_distance: int, dim: int) -> float:
-    """Aproximate the cosine similarity for a given hamming distance and dimension"""
-    result = 1 - (2 * hamming_distance) / dim
-    log.debug(f"Hamming distance: {hamming_distance} - Dim: {dim} - Result: {result}")
-    return 1 - (2 * hamming_distance) / dim
+def iscc_semantic(filepath: str) -> idk.IsccMeta:
+    """Generate ISCC-CODE extended with Semantic-Code for supported modalities (Image)"""
+    imeta = idk.code_iscc(filepath)
+    if imeta.mode == "image":
+        # Inject Semantic-Code
+        sci_code = sci.code_image_semantic(filepath, bits=64)["iscc"]
+        units = ic.iscc_decompose(imeta.iscc)
+        units.append(sci_code)
+        iscc_code_s = ic.gen_iscc_code(units)["iscc"]
+        imeta.iscc = iscc_code_s
+    return imeta
 
 
 def dist_to_sim(data, dim=64):
@@ -66,6 +53,13 @@ def dist_to_sim(data, dim=64):
             result[k.split("_")[0].title()] = 1.0 if v is True else -1.0
         else:
             result[k.split("_")[0].title()] = hamming_to_cosine(v, dim)
+    return result
+
+
+def hamming_to_cosine(hamming_distance: int, dim: int) -> float:
+    """Aproximate the cosine similarity for a given hamming distance and dimension"""
+    result = 1 - (2 * hamming_distance) / dim
+    log.debug(f"Hamming distance: {hamming_distance} - Dim: {dim} - Result: {result}")
     return result
 
 
@@ -113,103 +107,181 @@ def similarity_plot(sim_data):
     return fig
 
 
-custom_css = """
-.json-holder {
-    word-wrap: break-word;
-    white-space: pre-wrap;
-}
-"""
-
-
 with gr.Blocks(css=custom_css) as demo:
-    gr.Markdown(
-        """
-    ## 🖼️ ISCC Image-Code-Semantic Comparison
-    Compare two images using ISCC Semantic Image Codes
-    """
-    )
+    gr.Markdown("## 🖼️ ISCC Similarity Comparison")
+
     with gr.Row(variant="default", equal_height=True):
         with gr.Column(variant="compact"):
-            img1 = gr.Image(
-                label="Upload Image 1",
-                # sources=["upload"],
-                type="filepath",
-                height=320,
+            in_file_a = gr.File(
+                label="Media File A", type="filepath", elem_classes=["fixed-height"]
             )
+            out_thumb_a = gr.Image(
+                label="Extracted Thumbnail",
+                visible=False,
+                height=240,
+                elem_classes=["fixed-height"],
+                interactive=True,
+                show_download_button=False,
+                sources=["upload"],
+            )
+
+            # Proxy component to patch image example selection -> gr.File
+            dumy_image_a = gr.Image(visible=False, type="filepath", height=240)
+
             gr.Examples(
                 examples=IMAGES1.as_posix(),
                 cache_examples=False,
-                inputs=[img1],
+                inputs=[dumy_image_a],
+                elem_id="examples-a",
             )
 
+            out_iscc_a = gr.Text(label="ISCC")
+            with gr.Accordion(label="ISCC Metadata", open=False):
+                out_meta_a = gr.Code(language="json", label="JSON-LD")
+
         with gr.Column(variant="compact"):
-            img2 = gr.Image(
-                label="Upload Image 2",
-                # sources=["upload"],
-                type="filepath",
-                height=320,
+            in_file_b = gr.File(
+                label="Media File B", type="filepath", elem_classes=["fixed-height"]
             )
+
+            out_thumb_b = gr.Image(
+                label="Extracted Thumbnail",
+                visible=False,
+                height=240,
+                elem_classes=["fixed-height"],
+                interactive=True,
+                show_download_button=False,
+                sources=["upload"],
+            )
+
+            # Proxy component to patch image example selection -> gr.File
+            dumy_image_b = gr.Image(visible=False, type="filepath", height=240)
+
             gr.Examples(
                 examples=IMAGES2.as_posix(),
                 cache_examples=False,
-                inputs=[img2],
+                inputs=[dumy_image_b],
+                elem_id="examples-b",
             )
-    with gr.Row(variant="default"):
-        gr.ClearButton(components=[img1, img2])
 
-    with gr.Row():
-        with gr.Column(variant="panel"):
-            out_iscc1 = gr.Text(
-                label="ISCC-CODE",
-                container=True,
-                show_copy_button=True,
-            )
-            with gr.Accordion("Details", open=False):
-                out_detail1 = gr.Json(label="ISCC METADATA")
-        with gr.Column(variant="panel"):
-            out_iscc2 = gr.Text(
-                label="ISCC-CODE",
-                container=True,
-                show_copy_button=True,
-            )
-            with gr.Accordion("Details", open=False):
-                out_detail2 = gr.Json(label="ISCC METADATA")
+            out_iscc_b = gr.Text(label="ISCC")
+            with gr.Accordion(label="ISCC Metadata", open=False):
+                out_meta_b = gr.Code(language="json", label="JSON-LD")
 
     with gr.Row(variant="panel"):
         out_compare = gr.Plot(
             label="Approximate ISCC-UNIT Similarities", container=False
         )
 
-    def process_and_compare_images(file1, file2):
-        # Initialize default responses for when one or both images are not uploaded
-        iscc_code1 = ""
-        iscc_code2 = ""
-        detail1 = None
-        detail2 = None
+    def rewrite_uri(filepath, sample_set):
+        # type: (str, str) -> str
+        """Rewrites temporary image URI to original sample URI"""
+        if filepath:
+            inpath = Path(filepath)
+            outpath = HERE / f"{sample_set}/{inpath.name.replace('jpeg', 'jpg')}"
 
-        comparison_result = None
+            log.info(filepath)
+            return outpath.as_posix()
 
-        # Check if both images are uploaded
-        if file1 and file2:
-            # Generate ISCC codes for both images
-            iscc_code1, detail1 = generate_iscc_semantic(file1)
-            iscc_code2, detail2 = generate_iscc_semantic(file2)
-            comparison_result = compare(iscc_code1, iscc_code2)
+    def process_upload(filepath, suffix):
+        # type: (str, str) -> dict
+        """Generate extended ISCC with experimental Semantic Code (for images)"""
 
-        # Return the ISCC codes and the comparison result as separate outputs
-        return iscc_code1, detail1, iscc_code2, detail2, comparison_result
+        # Map to active component group
+        in_file_func = globals().get(f"in_file_{suffix}")
+        out_thumb_func = globals().get(f"out_thumb_{suffix}")
+        out_iscc_func = globals().get(f"out_iscc_{suffix}")
+        out_meta_func = globals().get(f"out_meta_{suffix}")
 
-    # Update the change method calls to handle the corrected output format
-    img1.change(
-        process_and_compare_images,
-        inputs=[img1, img2],
-        outputs=[out_iscc1, out_detail1, out_iscc2, out_detail2, out_compare],
+        # Handle emtpy filepath
+        if not filepath:
+            return {
+                in_file_func: None,
+            }
+
+        imeta = iscc_semantic(filepath)
+
+        # Pop Thumbnail for Preview
+        thumbnail = None
+        if imeta.thumbnail:
+            header, encoded = imeta.thumbnail.split(",", 1)
+            data = base64.b64decode(encoded)
+            thumbnail = Image.open(io.BytesIO(data))
+            imeta.thumbnail = None
+
+        result = {
+            in_file_func: gr.File(visible=False, value=None),
+            out_thumb_func: gr.Image(visible=True, value=thumbnail),
+            out_iscc_func: imeta.iscc,
+            out_meta_func: imeta.json(exclude_unset=False, by_alias=True, indent=2),
+        }
+
+        return result
+
+    def iscc_compare(iscc_a, iscc_b):
+        # type: (str, str) -> dict | None
+        """Compare two ISCCs"""
+        if not all([iscc_a, iscc_b]):
+            return None
+        dist_data = ic.iscc_compare(iscc_a, iscc_b)
+        sim_data = dist_to_sim(dist_data, dim=64)
+        sim_plot = similarity_plot(sim_data)
+        return sim_plot
+
+    # Events
+    in_file_a.change(
+        lambda file: process_upload(file, "a"),
+        inputs=[in_file_a],
+        outputs=[in_file_a, out_thumb_a, out_iscc_a, out_meta_a],
+        show_progress="full",
     )
-    img2.change(
-        process_and_compare_images,
-        inputs=[img1, img2],
-        outputs=[out_iscc1, out_detail1, out_iscc2, out_detail2, out_compare],
+    in_file_b.change(
+        lambda file: process_upload(file, "b"),
+        inputs=[in_file_b],
+        outputs=[in_file_b, out_thumb_b, out_iscc_b, out_meta_b],
+        show_progress="full",
     )
+    out_thumb_a.clear(
+        lambda: (gr.File(visible=True), gr.Image(visible=False), "", ""),
+        inputs=[],
+        outputs=[in_file_a, out_thumb_a, out_iscc_a, out_meta_a],
+        show_progress="hidden",
+    )
+
+    out_thumb_b.clear(
+        lambda: (gr.File(visible=True), gr.Image(visible=False), "", ""),
+        inputs=[],
+        outputs=[in_file_b, out_thumb_b, out_iscc_b, out_meta_b],
+        show_progress="hidden",
+    )
+
+    out_iscc_a.change(
+        iscc_compare,
+        inputs=[out_iscc_a, out_iscc_b],
+        outputs=[out_compare],
+        show_progress="hidden",
+    )
+
+    out_iscc_b.change(
+        iscc_compare,
+        inputs=[out_iscc_a, out_iscc_b],
+        outputs=[out_compare],
+        show_progress="hidden",
+    )
+
+    dumy_image_a.change(
+        lambda file: rewrite_uri(file, "images1"),
+        inputs=[dumy_image_a],
+        outputs=[in_file_a],
+        show_progress="hidden",
+    )
+    dumy_image_b.change(
+        lambda file: rewrite_uri(file, "images2"),
+        inputs=[dumy_image_b],
+        outputs=[in_file_b],
+        show_progress="hidden",
+    )
+
 
 if __name__ == "__main__":
     demo.launch(debug=True)
