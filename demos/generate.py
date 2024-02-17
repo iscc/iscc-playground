@@ -57,6 +57,7 @@ with gr.Blocks(title="ISCC Generator", css=custom_css) as demo:
                 label="Extracted Thumbnail",
                 elem_classes=["fixed-height"],
                 height=240,
+                show_download_button=False,
             )
         with gr.Column(scale=3):
             with gr.Group():
