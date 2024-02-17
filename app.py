@@ -9,6 +9,12 @@ custom_css = """
     height: 240px;  /* Fixed height */
     object-fit: contain;  /* Scale the image to fit within the element */
 }
+
+.fixed-height img {
+    height: 240px;  /* Fixed height */
+    object-fit: contain;  /* Scale the image to fit within the element */
+}
+
 #chunked-text span.label {
     text-transform: none !important;
 }
