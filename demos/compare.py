@@ -26,6 +26,14 @@ custom_css = """
     object-fit: contain;  /* Scale the image to fit within the element */
 }
 
+.small-height {
+    display: flex;        /* Use flexbox layout */
+    flex-direction: column; /* Arrange children vertically */
+    justify-content: flex-end; /* Align children to the end (bottom) */
+    height: 100px;        /* Fixed height */
+    object-fit: contain;  /* Scale the content to fit within the element */
+}
+
 #examples-a, #examples-b {
     height: 140px;  /* Fixed height */
     object-fit: contain;  /* Scale the image to fit within the element */
@@ -107,6 +115,91 @@ def similarity_plot(sim_data):
     return fig
 
 
+def bit_matrix_plot(iscc_code):
+    # type: (ic.Code) -> go.Figure
+    """
+    Create a bit matrix plot for an ISCC-CODE
+    """
+
+    # Decode ISCC-CODE
+    data = {}
+    for unit in ic.iscc_decompose(iscc_code.code):
+        unit = ic.Code(unit)
+        data[unit.type_id.split("-")[0]] = unit.hash_bits
+
+    # Prepare data for heatmap
+    z = []
+    for key, value in data.items():
+        z.append([int(bit) for bit in value])
+
+    # Define colors for 0 and 1 bits
+    colorscale = [[0, "#D3D3D3"], [1, "#9ACD32"]]  # Light gray for 0, lemon green for 1
+
+    # Build Plotly Visualization
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=z,
+            xgap=2,  # Gap between squares in x direction
+            ygap=2,  # Gap between squares in y direction
+            showscale=False,  # Hide color scale
+            colorscale=colorscale,
+            hoverinfo="x+y",
+            hovertemplate="BIT #: %{x}<br>UNIT: %{y}<extra></extra>",
+        )
+    )
+
+    # Update layout for autoscaling while maintaining aspect ratio
+    fig.update_layout(
+        height=60,
+        autosize=True,
+        xaxis=dict(
+            ticks="",
+            side="top",
+            scaleanchor="y",
+            constrain="domain",
+            showticklabels=False,
+        ),
+        yaxis=dict(
+            ticks="",
+            tickvals=list(range(len(data))),
+            ticktext=list(data.keys()),
+            side="left",
+            autorange="reversed",
+            showticklabels=False,
+        ),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",  # Transparent background
+        margin=dict(l=10, r=10, t=30, b=10),  # Reduce default margins
+        modebar_remove=[
+            "zoom",
+            "pan",
+            "select",
+            "lasso2d",
+            "zoomIn",
+            "zoomOut",
+            "autoScale",
+            "resetScale",
+        ],
+    )
+
+    fig.update_xaxes(
+        fixedrange=False,
+        showline=False,
+        zeroline=False,
+        showgrid=False,
+        gridcolor="rgba(0,0,0,0)",
+    )
+    fig.update_yaxes(
+        fixedrange=False,
+        showline=False,
+        zeroline=False,
+        showgrid=False,
+        gridcolor="rgba(0,0,0,0)",
+    )
+
+    return fig
+
+
 with gr.Blocks(css=custom_css) as demo:
     gr.Markdown("## 🖼️ ISCC Similarity Comparison")
 
@@ -137,6 +230,10 @@ with gr.Blocks(css=custom_css) as demo:
 
             out_iscc_a = gr.Text(label="ISCC", show_copy_button=True)
 
+            out_dna_a = gr.Plot(
+                label="BIT-Matrix", container=True, elem_classes=["small-height"]
+            )
+
             with gr.Accordion(label="ISCC Metadata", open=False):
                 out_meta_a = gr.Code(language="json", label="JSON-LD")
 
@@ -166,6 +263,11 @@ with gr.Blocks(css=custom_css) as demo:
             )
 
             out_iscc_b = gr.Text(label="ISCC", show_copy_button=True)
+
+            out_dna_b = gr.Plot(
+                label="BIT-Matrix", container=True, elem_classes=["small-height"]
+            )
+
             with gr.Accordion(label="ISCC Metadata", open=False):
                 out_meta_b = gr.Code(language="json", label="JSON-LD")
 
@@ -192,6 +294,7 @@ with gr.Blocks(css=custom_css) as demo:
         in_file_func = globals().get(f"in_file_{suffix}")
         out_thumb_func = globals().get(f"out_thumb_{suffix}")
         out_iscc_func = globals().get(f"out_iscc_{suffix}")
+        out_dna_func = globals().get(f"out_dna_{suffix}")
         out_meta_func = globals().get(f"out_meta_{suffix}")
 
         # Handle emtpy filepath
@@ -200,7 +303,10 @@ with gr.Blocks(css=custom_css) as demo:
                 in_file_func: None,
             }
 
-        imeta = iscc_semantic(filepath)
+        imeta: idk.IsccMeta = iscc_semantic(filepath)
+
+        # Create Bit-Matrix Plot
+        matrix_plot = bit_matrix_plot(imeta.iscc_obj)
 
         # Pop Thumbnail for Preview
         thumbnail = None
@@ -214,6 +320,7 @@ with gr.Blocks(css=custom_css) as demo:
             in_file_func: gr.File(visible=False, value=None),
             out_thumb_func: gr.Image(visible=True, value=thumbnail),
             out_iscc_func: imeta.iscc,
+            out_dna_func: matrix_plot,
             out_meta_func: imeta.json(exclude_unset=False, by_alias=True, indent=2),
         }
 
@@ -233,26 +340,26 @@ with gr.Blocks(css=custom_css) as demo:
     in_file_a.change(
         lambda file: process_upload(file, "a"),
         inputs=[in_file_a],
-        outputs=[in_file_a, out_thumb_a, out_iscc_a, out_meta_a],
+        outputs=[in_file_a, out_thumb_a, out_iscc_a, out_dna_a, out_meta_a],
         show_progress="full",
     )
     in_file_b.change(
         lambda file: process_upload(file, "b"),
         inputs=[in_file_b],
-        outputs=[in_file_b, out_thumb_b, out_iscc_b, out_meta_b],
+        outputs=[in_file_b, out_thumb_b, out_iscc_b, out_dna_b, out_meta_b],
         show_progress="full",
     )
     out_thumb_a.clear(
         lambda: (gr.File(visible=True), gr.Image(visible=False), "", ""),
         inputs=[],
-        outputs=[in_file_a, out_thumb_a, out_iscc_a, out_meta_a],
+        outputs=[in_file_a, out_thumb_a, out_iscc_a, out_dna_a, out_meta_a],
         show_progress="hidden",
     )
 
     out_thumb_b.clear(
         lambda: (gr.File(visible=True), gr.Image(visible=False), "", ""),
         inputs=[],
-        outputs=[in_file_b, out_thumb_b, out_iscc_b, out_meta_b],
+        outputs=[in_file_b, out_thumb_b, out_iscc_b, out_dna_a, out_meta_b],
         show_progress="hidden",
     )
 

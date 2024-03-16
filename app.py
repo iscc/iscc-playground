@@ -15,6 +15,14 @@ custom_css = """
     object-fit: contain;  /* Scale the image to fit within the element */
 }
 
+.small-height {
+    display: flex;        /* Use flexbox layout */
+    flex-direction: column; /* Arrange children vertically */
+    justify-content: flex-end; /* Align children to the end (bottom) */
+    height: 100px;        /* Fixed height */
+    object-fit: contain;  /* Scale the content to fit within the element */
+}
+
 #chunked-text span.label {
     text-transform: none !important;
 }
