@@ -1,4 +1,5 @@
 gradio==4.21.0
 iscc-sdk==0.6.1
+iscc-core==1.0.9
 iscc-sci==0.1.0
 plotly==5.20.0
