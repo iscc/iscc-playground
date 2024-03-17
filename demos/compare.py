@@ -115,6 +115,7 @@ def similarity_plot(sim_data):
             textfont={
                 "size": 14,
                 "family": "JetBrains Mono",
+                "color": "white",
             },
             hoverinfo=None,
             hovertemplate="ISCC-UNIT: %{y}<br>SIMILARITY: %{x}<extra></extra>",
@@ -183,7 +184,7 @@ def bit_matrix_plot(iscc_code):
         z.append([int(bit) for bit in value])
 
     # Define colors for 0 and 1 bits
-    colorscale = [[0, "#f56169"], [1, "#a6db50"]]
+    colorscale = [[0, "#7ac2f7"], [1, "#0054b2"]]
 
     # Build Plotly Visualization
     fig = go.Figure(
@@ -297,7 +298,7 @@ def bit_comparison(iscc_code1, iscc_code2):
             hoverlabel={
                 "font": {"family": "JetBrains Mono"},
             },
-            texttemplate="",  # Use "%{text}" for showing bits
+            texttemplate="%{text}",  # Use "%{text}" for showing bits
             textfont={
                 "size": 14,
                 "color": "#FFFFFF",
