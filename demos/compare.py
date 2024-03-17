@@ -357,7 +357,7 @@ def bit_comparison(iscc_code1, iscc_code2):
 
 
 with gr.Blocks(css=custom_css) as demo:
-    gr.Markdown("## 🖼️ ISCC Similarity Comparison")
+    gr.Markdown("## ⚙️ ISCC Similarity Comparison")
 
     with gr.Row(variant="default", equal_height=True):
         with gr.Column(variant="compact"):

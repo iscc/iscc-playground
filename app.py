@@ -71,8 +71,8 @@ iscc_theme = gr.themes.Default(
 
 demo = gr.TabbedInterface(
     title="▶️ ISCC Playground - The DNA of your digital content",
-    interface_list=[demo_generate, demo_compare, demo_inspect, demo_chunker],
-    tab_names=["GENERATE", "COMPARE", "INSPECT", "CHUNKER"],
+    interface_list=[demo_compare, demo_generate, demo_inspect, demo_chunker],
+    tab_names=["COMPARE", "GENERATE", "INSPECT", "CHUNKER"],
     css=custom_css,
     theme=iscc_theme,
 )
