@@ -6,6 +6,7 @@ import gradio as gr
 from PIL import Image
 import iscc_core as ic
 import iscc_sdk as idk
+import iscc_schema as iss
 import iscc_sci as sci
 import plotly.graph_objects as go
 import pandas as pd
@@ -30,8 +31,28 @@ custom_css = """
     display: flex;        /* Use flexbox layout */
     flex-direction: column; /* Arrange children vertically */
     justify-content: flex-end; /* Align children to the end (bottom) */
-    height: 100px;        /* Fixed height */
+    height: 85px;        /* Fixed height */
     object-fit: contain;  /* Scale the content to fit within the element */
+}
+
+.bit-matrix-big {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: 120px;        /* Fixed height */
+    object-fit: contain;  /* Scale the content to fit within the element */
+}
+
+.iscc-unit-sim {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: 120px;        /* Fixed height */
+    object-fit: contain;  /* Scale the content to fit within the element */
+}
+
+.modebar-btn {
+    display: none !important;
 }
 
 #examples-a, #examples-b {
@@ -78,11 +99,7 @@ def similarity_plot(sim_data):
     data_df["Percentage"] = data_df["Value"] * 100  # Convert to percentage
 
     # Define color for bars based on value
-    # data_df["Color"] = ["red" if x < 0 else "green" for x in data_df["Value"]]
-    data_df["Color"] = [
-        f"rgba(224,122,95,{abs(x)})" if x < 0 else f"rgba(118,185,71,{x})"
-        for x in data_df["Value"]
-    ]
+    data_df["Color"] = ["#f56169" if x < 0 else "#a6db50" for x in data_df["Value"]]
 
     # Create Plotly Figure
     fig = go.Figure()
@@ -92,25 +109,58 @@ def similarity_plot(sim_data):
             y=data_df["Category"],
             orientation="h",
             marker_color=data_df["Color"],
+            marker_line={"width": 0},
             text=data_df["Percentage"].apply(lambda x: f"{x:.2f}%"),
             textposition="inside",
+            textfont={
+                "size": 14,
+                "family": "JetBrains Mono",
+            },
+            hoverinfo=None,
+            hovertemplate="ISCC-UNIT: %{y}<br>SIMILARITY: %{x}<extra></extra>",
+            hoverlabel={
+                "font": {"family": "JetBrains Mono", "color": "#FFFFFF"},
+                "bgcolor": "#444444",
+            },
         )
-    )  # Change made here
+    )
 
     # Update layout for aesthetics
     fig.update_layout(
-        title={"text": "Approximate ISCC-UNIT Similarities", "x": 0.5},
-        xaxis=dict(title="Similarity", tickformat=",.0%"),
-        yaxis=dict(title=""),
-        plot_bgcolor="rgba(0,0,0,0)",
-        height=len(sim_data) * 70,
-        showlegend=False,
+        height=len(sim_data) * 40,
         autosize=True,
-        margin=dict(l=50, r=50, t=50, b=50),
+        xaxis=dict(
+            title="",
+            tickformat=",.0%",
+            showticklabels=False,
+        ),
+        yaxis=dict(
+            title="",
+            showticklabels=False,
+        ),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        showlegend=False,
+        modebar_remove=[
+            "toImage",
+            "zoom",
+            "pan",
+            "zoomIn",
+            "zoomOut",
+            "autoScale",
+            "resetScale",
+        ],
     )
 
     # Adjust the x-axis to accommodate percentage labels
-    fig.update_xaxes(range=[-1.1, 1.1])
+    fig.update_xaxes(
+        range=[-1.1, 1.1],
+        fixedrange=False,
+        showline=False,
+        zeroline=False,
+        showgrid=False,
+        gridcolor="rgba(0,0,0,0)",
+    )
 
     return fig
 
@@ -133,22 +183,24 @@ def bit_matrix_plot(iscc_code):
         z.append([int(bit) for bit in value])
 
     # Define colors for 0 and 1 bits
-    colorscale = [[0, "#D3D3D3"], [1, "#9ACD32"]]  # Light gray for 0, lemon green for 1
+    colorscale = [[0, "#f56169"], [1, "#a6db50"]]
 
     # Build Plotly Visualization
     fig = go.Figure(
         data=go.Heatmap(
             z=z,
-            xgap=2,  # Gap between squares in x direction
-            ygap=2,  # Gap between squares in y direction
-            showscale=False,  # Hide color scale
+            xgap=2,
+            ygap=2,
+            showscale=False,
             colorscale=colorscale,
             hoverinfo="x+y",
-            hovertemplate="BIT #: %{x}<br>UNIT: %{y}<extra></extra>",
+            hovertemplate="ISCC-UNIT: %{y}<br>BIT-NUMBR: %{x}<br>BIT-VALUE: %{z}<extra></extra>",
+            hoverlabel={
+                "font": {"family": "JetBrains Mono"},
+            },
         )
     )
 
-    # Update layout for autoscaling while maintaining aspect ratio
     fig.update_layout(
         height=60,
         autosize=True,
@@ -168,13 +220,117 @@ def bit_matrix_plot(iscc_code):
             showticklabels=False,
         ),
         paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",  # Transparent background
-        margin=dict(l=10, r=10, t=30, b=10),  # Reduce default margins
+        plot_bgcolor="rgba(0,0,0,0)",
+        margin=dict(l=10, r=10, t=0, b=10),
         modebar_remove=[
+            "toImage",
             "zoom",
             "pan",
-            "select",
-            "lasso2d",
+            "zoomIn",
+            "zoomOut",
+            "autoScale",
+            "resetScale",
+        ],
+    )
+
+    fig.update_xaxes(
+        fixedrange=False,
+        showline=False,
+        zeroline=False,
+        showgrid=False,
+        gridcolor="rgba(0,0,0,0)",
+    )
+    fig.update_yaxes(
+        fixedrange=False,
+        showline=False,
+        zeroline=False,
+        showgrid=False,
+        gridcolor="rgba(0,0,0,0)",
+    )
+
+    return fig
+
+
+def bit_comparison(iscc_code1, iscc_code2):
+    """
+    Create a comparison bit matrix plot for two ISCC-CODES
+    """
+
+    # Decode ISCC-CODEs
+    data1, data2 = {}, {}
+    for unit in ic.iscc_decompose(iscc_code1):
+        unit = ic.Code(unit)
+        data1[unit.type_id.split("-")[0]] = unit.hash_bits
+    for unit in ic.iscc_decompose(iscc_code2):
+        unit = ic.Code(unit)
+        data2[unit.type_id.split("-")[0]] = unit.hash_bits
+
+    # Prepare data for heatmap comparison
+    z = []
+    text = []
+    for key in data1.keys():
+        z_row = []
+        text_row = []
+        for bit1, bit2 in zip(data1[key], data2.get(key, "")):
+            if bit1 == bit2:
+                z_row.append(int(bit1))
+                text_row.append(bit1)
+            else:
+                z_row.append(2)
+                text_row.append("x")
+        z.append(z_row)
+        text.append(text_row)
+
+    # Define colors for 0, 1, and non-matching bits
+    colorscale = [[0, "#a6db50"], [0.5, "#a6db50"], [1, "#f56169"]]
+
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=z,
+            text=text,
+            xgap=2,
+            ygap=2,
+            showscale=False,
+            colorscale=colorscale,
+            hoverinfo="text",
+            hovertemplate="ISCC-UNIT: %{y}<br>BIT-NUMBR: %{x}<br>BIT-VALUE: %{z}<extra></extra>",
+            hoverlabel={
+                "font": {"family": "JetBrains Mono"},
+            },
+            texttemplate="",  # Use "%{text}" for showing bits
+            textfont={
+                "size": 14,
+                "color": "#FFFFFF",
+                "family": "JetBrains Mono",
+            },
+        )
+    )
+
+    fig.update_layout(
+        height=120,
+        autosize=True,
+        xaxis=dict(
+            ticks="",
+            side="top",
+            scaleanchor="y",
+            constrain="domain",
+            showticklabels=False,
+        ),
+        yaxis=dict(
+            ticks="",
+            tickvals=list(range(len(data1))),
+            ticktext=list(data1.keys()),
+            side="left",
+            autorange="reversed",
+            showticklabels=False,
+        ),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        margin=dict(l=0, r=0, t=0, b=0),
+        modebar_remove=[
+            "toImage",
+            "zoom",
+            "pan",
             "zoomIn",
             "zoomOut",
             "autoScale",
@@ -230,12 +386,13 @@ with gr.Blocks(css=custom_css) as demo:
 
             out_iscc_a = gr.Text(label="ISCC", show_copy_button=True)
 
-            out_dna_a = gr.Plot(
-                label="BIT-Matrix", container=True, elem_classes=["small-height"]
-            )
-
-            with gr.Accordion(label="ISCC Metadata", open=False):
-                out_meta_a = gr.Code(language="json", label="JSON-LD")
+            with gr.Accordion(label="Details", open=False):
+                out_dna_a = gr.Plot(
+                    label="BIT-MATRIX",
+                    container=True,
+                    elem_classes=["small-height"],
+                )
+                out_meta_a = gr.Code(language="json", label="ISCC Metadata")
 
         with gr.Column(variant="compact"):
             in_file_b = gr.File(
@@ -264,17 +421,44 @@ with gr.Blocks(css=custom_css) as demo:
 
             out_iscc_b = gr.Text(label="ISCC", show_copy_button=True)
 
-            out_dna_b = gr.Plot(
-                label="BIT-Matrix", container=True, elem_classes=["small-height"]
+            with gr.Accordion(
+                label="Details",
+                open=False,
+            ):
+                out_dna_b = gr.Plot(
+                    label="BIT-MATRIX",
+                    container=True,
+                    elem_classes=["small-height"],
+                )
+                out_meta_b = gr.Code(language="json", label="ISCC Metadata")
+
+    with gr.Row(variant="default", equal_height=True):
+        with gr.Column(variant="compact"):
+            out_bitcompare = gr.Plot(
+                label="BIT-MATRIX Comparison",
+                container=True,
+                elem_classes=["bit-matrix-big"],
             )
 
-            with gr.Accordion(label="ISCC Metadata", open=False):
-                out_meta_b = gr.Code(language="json", label="JSON-LD")
+    with gr.Row(variant="default", equal_height=True):
+        with gr.Column(variant="compact"):
+            out_compare = gr.Plot(
+                label="ISCC-UNIT Similarities",
+                container=True,
+                elem_classes=["iscc-unit-sim"],
+            )
 
-    with gr.Row(variant="panel"):
-        out_compare = gr.Plot(
-            label="Approximate ISCC-UNIT Similarities", container=False
-        )
+    # Custom footer
+    footer = (
+        "https://github.com/iscc"
+        f" | iscc-core v{ic.__version__}"
+        f" | iscc-sdk v{idk.__version__}"
+        f" | iscc-sci v{sci.__version__}"
+        f" | iscc-schema v{iss.__version__}"
+    )
+    gr.Markdown(
+        footer,
+    )
 
     def rewrite_uri(filepath, sample_set):
         # type: (str, str) -> str
@@ -330,11 +514,12 @@ with gr.Blocks(css=custom_css) as demo:
         # type: (str, str) -> dict | None
         """Compare two ISCCs"""
         if not all([iscc_a, iscc_b]):
-            return None
+            return None, None
         dist_data = ic.iscc_compare(iscc_a, iscc_b)
         sim_data = dist_to_sim(dist_data, dim=64)
         sim_plot = similarity_plot(sim_data)
-        return sim_plot
+        bit_plot = bit_comparison(iscc_a, iscc_b)
+        return sim_plot, bit_plot
 
     # Events
     in_file_a.change(
@@ -350,30 +535,42 @@ with gr.Blocks(css=custom_css) as demo:
         show_progress="full",
     )
     out_thumb_a.clear(
-        lambda: (gr.File(visible=True), gr.Image(visible=False), "", ""),
+        lambda: (
+            gr.File(visible=True),
+            gr.Image(visible=False),
+            "",
+            gr.Plot(value=None),
+            "",
+        ),
         inputs=[],
         outputs=[in_file_a, out_thumb_a, out_iscc_a, out_dna_a, out_meta_a],
         show_progress="hidden",
     )
 
     out_thumb_b.clear(
-        lambda: (gr.File(visible=True), gr.Image(visible=False), "", ""),
+        lambda: (
+            gr.File(visible=True),
+            gr.Image(visible=False),
+            "",
+            gr.Plot(value=None),
+            "",
+        ),
         inputs=[],
-        outputs=[in_file_b, out_thumb_b, out_iscc_b, out_dna_a, out_meta_b],
+        outputs=[in_file_b, out_thumb_b, out_iscc_b, out_dna_b, out_meta_b],
         show_progress="hidden",
     )
 
     out_iscc_a.change(
         iscc_compare,
         inputs=[out_iscc_a, out_iscc_b],
-        outputs=[out_compare],
+        outputs=[out_compare, out_bitcompare],
         show_progress="hidden",
     )
 
     out_iscc_b.change(
         iscc_compare,
         inputs=[out_iscc_a, out_iscc_b],
-        outputs=[out_compare],
+        outputs=[out_compare, out_bitcompare],
         show_progress="hidden",
     )
 

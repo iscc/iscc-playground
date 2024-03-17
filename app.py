@@ -15,11 +15,31 @@ custom_css = """
     object-fit: contain;  /* Scale the image to fit within the element */
 }
 
+.modebar-btn {
+    display: none !important;
+}
+
 .small-height {
     display: flex;        /* Use flexbox layout */
     flex-direction: column; /* Arrange children vertically */
     justify-content: flex-end; /* Align children to the end (bottom) */
-    height: 100px;        /* Fixed height */
+    height: 85px;        /* Fixed height */
+    object-fit: contain;  /* Scale the content to fit within the element */
+}
+
+.bit-matrix-big {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: 150px;        /* Fixed height */
+    object-fit: contain;  /* Scale the content to fit within the element */
+}
+
+.iscc-unit-sim {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: 240px;        /* Fixed height */
     object-fit: contain;  /* Scale the content to fit within the element */
 }
 
