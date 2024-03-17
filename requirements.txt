@@ -1,4 +1,4 @@
-gradio==4.19.1
+gradio==4.21.0
 iscc-sdk==0.6.1
 iscc-sci==0.1.0
-plotly==5.19.0
+plotly==5.20.0
