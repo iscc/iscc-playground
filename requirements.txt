@@ -1,6 +1,6 @@
-gradio
-iscc-sdk
-iscc-core
-iscc-sci
-plotly
-pydantic-settings
+gradio==4.36.1
+iscc-sdk==0.6.2
+iscc-core==1.0.9
+iscc-sci==0.1.0
+plotly==5.22.0
+
