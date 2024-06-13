@@ -3,3 +3,4 @@ iscc-sdk
 iscc-core
 iscc-sci
 plotly
+pydantic-settings
