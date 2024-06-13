@@ -63,8 +63,8 @@ textarea {
 
 
 iscc_theme = gr.themes.Default(
-    font=gr.themes.GoogleFont("Readex Pro"),
-    font_mono=gr.themes.GoogleFont("JetBrains Mono"),
+    font=[gr.themes.GoogleFont("Readex Pro"), "Arial", "sans-serif"],
+    font_mono=[gr.themes.GoogleFont("JetBrains Mono"), "Courier", "monospace"],
     radius_size=gr.themes.sizes.radius_none,
 )
 
@@ -74,7 +74,7 @@ demo = gr.TabbedInterface(
     interface_list=[demo_compare, demo_generate, demo_inspect, demo_chunker],
     tab_names=["COMPARE", "GENERATE", "INSPECT", "CHUNKER"],
     css=custom_css,
-    theme=iscc_theme,
+    # theme=iscc_theme,
 )
 
 

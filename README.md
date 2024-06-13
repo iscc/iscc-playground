@@ -4,8 +4,11 @@ emoji: ▶️
 colorFrom: red
 colorTo: blue
 sdk: gradio
+sdk_version: 4.36.1
 app_file: app.py
 pinned: true
+license: apache-2.0
+short_description: Explore the International Standard Content Code
 ---
 # ISCC - Gradio Playground
 
@@ -31,6 +34,6 @@ general digital asset management use-cases.
 
 ## Project Status
 
-The ISCC is under development as [ISO/DIS 24138](https://www.iso.org/standard/77899.html) -
+The ISCC is published as [ISO 24138:2024](https://www.iso.org/standard/77899.html) -
 International Standard Content Code within
 [ISO/TC 46/SC 9/WG 18](https://www.iso.org/committee/48836.html).

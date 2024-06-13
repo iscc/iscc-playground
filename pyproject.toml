@@ -8,14 +8,17 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-gradio = "*"
+gradio = "^4.26"
 iscc-sdk = "^0.6.1"
 iscc-core= "^1.0.9"
 iscc-sci = "^0.1.0"
-plotly = "^5.18.0"
+plotly = "^5.22.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.12.1"
+ruff = "*"
+
+[tool.ruff]
+line-length = 100
 
 [build-system]
 requires = ["poetry-core"]

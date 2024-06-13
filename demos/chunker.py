@@ -45,9 +45,7 @@ def chunk_text(text, chunk_size):
         end = start + size
         chunks.append(no_nl(cleaned[start:end]))
         start = end
-    result = [
-        (chunk, f"{size}:{feat}") for chunk, size, feat in zip(chunks, sizes, features)
-    ]
+    result = [(chunk, f"{size}:{feat}") for chunk, size, feat in zip(chunks, sizes, features)]
     idk.sdk_opts.text_avg_chunk_size = original_chunk_size
     return result
 
