@@ -8,8 +8,8 @@ readme = "README.md"
 package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.9"
-gradio = "4.44.1"
+python = "^3.10"
+gradio = "5.33.1"
 iscc-sdk = "^0.6.2"
 iscc-core= "^1.0.9"
 iscc-sci = "^0.1.0"
