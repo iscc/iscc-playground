@@ -5,10 +5,11 @@ description = "UI for ISCC exploration"
 authors = ["Titusz <tp@py7.de>"]
 license = "Apache-2.0"
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.9"
-gradio = "^4"
+gradio = "4.44.1"
 iscc-sdk = "^0.6.2"
 iscc-core= "^1.0.9"
 iscc-sci = "^0.1.0"
