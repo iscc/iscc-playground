@@ -4,14 +4,31 @@ on:
     branches:
       - main
 jobs:
-  build:
+  sync:
+    name: Sync to Hugging Face Spaces
     runs-on: ubuntu-latest
     steps:
-    - name: Sync with Hugging Face
-      uses: nateraw/huggingface-sync-action@v0.0.5
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: Sync to Hugging Face Spaces
+      uses: JacobLinCool/huggingface-sync@v1
       with:
-        github_repo_id: iscc/iscc-playground
-        huggingface_repo_id: iscc/iscc-playground
-        repo_type: space
-        space_sdk: gradio
-        hf_token: ${{ secrets.HF_TOKEN }}
+        github: ${{ secrets.GITHUB_TOKEN }}
+        user: iscc
+        space: iscc-playground
+        token: ${{ secrets.HF_TOKEN }}
+        configuration: |
+          title: ISCC - Playground
+          emoji: ▶️
+          colorFrom: red
+          colorTo: blue
+          python_version: 3.12
+          sdk: gradio
+          sdk_version: 4.44.1
+          app_file: app.py
+          pinned: true
+          fullWidth: true
+          header: default
+          license: apache-2.0
+          short_description: Explore the International Standard Content Code
