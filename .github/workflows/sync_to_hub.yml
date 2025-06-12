@@ -19,7 +19,7 @@ jobs:
       
     - name: Generate requirements.txt
       run: |
-        uv pip compile pyproject.toml -o requirements.txt --python-platform linux
+        uv pip compile pyproject.toml -o requirements.txt --python-platform x86_64-manylinux_2_28
         
     - name: Push to Hugging Face with LFS
       env:
