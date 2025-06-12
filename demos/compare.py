@@ -362,9 +362,7 @@ with gr.Blocks(css=custom_css) as demo:
 
     with gr.Row(variant="default", equal_height=True):
         with gr.Column(variant="compact"):
-            in_file_a = gr.File(
-                label="Media File A", type="filepath", elem_classes=["fixed-height"]
-            )
+            in_file_a = gr.File(label="Media File A", type="filepath", elem_classes=["fixed-height"])
             out_thumb_a = gr.Image(
                 label="Extracted Thumbnail",
                 visible=False,
@@ -396,9 +394,7 @@ with gr.Blocks(css=custom_css) as demo:
                 out_meta_a = gr.Code(language="json", label="ISCC Metadata")
 
         with gr.Column(variant="compact"):
-            in_file_b = gr.File(
-                label="Media File B", type="filepath", elem_classes=["fixed-height"]
-            )
+            in_file_b = gr.File(label="Media File B", type="filepath", elem_classes=["fixed-height"])
 
             out_thumb_b = gr.Image(
                 label="Extracted Thumbnail",

@@ -62,9 +62,7 @@ with gr.Blocks(title="ISCC Generator", css=custom_css) as demo:
         with gr.Column(scale=3):
             with gr.Group():
                 out_name = gr.Text(label="Name", show_copy_button=True)
-                out_description = gr.Textbox(
-                    label="Description", lines=4, max_lines=4, show_copy_button=True
-                )
+                out_description = gr.Textbox(label="Description", lines=4, max_lines=4, show_copy_button=True)
 
     with gr.Row():
         with gr.Accordion(label="ISCC Metadata", open=False):

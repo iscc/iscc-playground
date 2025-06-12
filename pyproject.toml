@@ -1,26 +1,39 @@
-[tool.poetry]
+[project]
 name = "iscc-playground"
 version = "0.1.0"
 description = "UI for ISCC exploration"
-authors = ["Titusz <tp@py7.de>"]
-license = "Apache-2.0"
+authors = [{ name = "Titusz", email = "tp@py7.de" }]
+requires-python = ">=3.12,<3.13"
 readme = "README.md"
-package-mode = false
+license = "Apache-2.0"
+dependencies = [
+    "gradio==4.36.1",
+    "iscc-sdk==0.6.2",
+    "iscc-core==1.0.9",
+    "iscc-sci==0.1.0",
+    "plotly==5.22.0",
+]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-gradio = "5.33.1"
-iscc-sdk = "^0.6.2"
-iscc-core= "^1.0.9"
-iscc-sci = "^0.1.0"
-plotly = "^5.22"
+[dependency-groups]
+dev = [
+    "poethepoet>=0.35.0",
+    "ruff",
+]
 
-[tool.poetry.group.dev.dependencies]
-ruff = "*"
+[tool.uv]
+package = false
 
 [tool.ruff]
-line-length = 100
+line-length = 112
+
+[tool.poe.tasks]
+format-code = { cmd = "uv run ruff format", help = "Code style formating with ruff" }
+sync-requirements = { cmd = "uv pip compile pyproject.toml -o requirements.txt", help = "Sync requirements.txt for huggingface spaces deployment"}
+all = ["format-code", "sync-requirements"]
+
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
