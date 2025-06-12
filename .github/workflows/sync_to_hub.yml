@@ -10,11 +10,13 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
-      
-    - name: Sync to Hugging Face Spaces
-      uses: JacobLinCool/huggingface-sync@v1
       with:
-        github: ${{ secrets.GITHUB_TOKEN }}
-        user: iscc
-        space: iscc-playground
-        token: ${{ secrets.HF_TOKEN }}
+        fetch-depth: 0
+        lfs: true
+        
+    - name: Push to Hugging Face
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      run: |
+        git remote add space https://iscc:$HF_TOKEN@huggingface.co/spaces/iscc/iscc-playground
+        git push space main --force

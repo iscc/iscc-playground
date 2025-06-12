@@ -133,3 +133,4 @@ dmypy.json
 .aider*
 .venv-wsl
 CLAUDE.local.md
+.claude
