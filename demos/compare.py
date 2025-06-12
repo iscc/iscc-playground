@@ -43,16 +43,71 @@ custom_css = """
     object-fit: contain;  /* Scale the content to fit within the element */
 }
 
+/* Comprehensive fix for ISCC-UNIT Similarities panel */
 .iscc-unit-sim {
-    height: 300px !important;        /* Fixed height for proper bar display */
+    height: 300px !important;
+    min-height: 300px !important;
+    display: block !important;
+    position: relative !important;
 }
 
-.iscc-unit-sim .js-plotly-plot {
+/* Target Gradio's container structure */
+.iscc-unit-sim > div {
     height: 100% !important;
+    min-height: 280px !important;
+    position: relative !important;
 }
 
-.iscc-unit-sim .plotly {
+/* Target plotly containers with multiple selectors for robustness */
+.iscc-unit-sim .plot-container,
+.iscc-unit-sim .js-plotly-plot,
+.iscc-unit-sim .plotly,
+.iscc-unit-sim .plotly-graph-div,
+.iscc-unit-sim > div > div {
     height: 100% !important;
+    min-height: 280px !important;
+    position: relative !important;
+}
+
+/* Ensure SVG fills container */
+.iscc-unit-sim svg,
+.iscc-unit-sim .main-svg {
+    height: 100% !important;
+    min-height: 280px !important;
+}
+
+/* Force plot container to expand in HF Spaces */
+.iscc-unit-sim [class*="svelte"] {
+    height: 100% !important;
+    min-height: 280px !important;
+}
+
+/* Additional targeting for Gradio 5 structure */
+.iscc-unit-sim .contain {
+    height: 100% !important;
+    min-height: 280px !important;
+}
+
+/* Plotly specific fixes for HF Spaces */
+.iscc-unit-sim .plotly-notifier {
+    visibility: hidden !important;
+}
+
+/* Force Plotly graph to fill container */
+.iscc-unit-sim .svg-container {
+    height: 100% !important;
+    position: relative !important;
+}
+
+.iscc-unit-sim .plot-container.plotly {
+    height: 100% !important;
+    width: 100% !important;
+}
+
+/* Override any inline styles */
+.iscc-unit-sim div[style*="height"] {
+    height: 100% !important;
+    min-height: 280px !important;
 }
 
 .modebar-btn {
@@ -105,6 +160,9 @@ def similarity_plot(sim_data):
     # Define color for bars based on value
     data_df["Color"] = ["#f56169" if x < 0 else "#a6db50" for x in data_df["Value"]]
 
+    # Calculate appropriate bar thickness
+    num_categories = len(data_df)
+
     # Create Plotly Figure
     fig = go.Figure()
     fig.add_trace(
@@ -130,23 +188,40 @@ def similarity_plot(sim_data):
         )
     )
 
-    # Update layout for aesthetics
+    # Update layout for HF Spaces compatibility
     fig.update_layout(
-        height=280,  # Set explicit height for Gradio 5 compatibility
-        autosize=True,
+        height=295,  # Maximize within container while leaving small buffer
+        autosize=False,
         xaxis=dict(
             title="",
             tickformat=",.0%",
             showticklabels=False,
+            fixedrange=True,
+            range=[-1.1, 1.1],
+            showline=False,
+            zeroline=False,
+            showgrid=False,
+            gridcolor="rgba(0,0,0,0)",
         ),
         yaxis=dict(
             title="",
             showticklabels=False,
+            fixedrange=True,
+            showline=False,
+            zeroline=False,
+            showgrid=False,
+            gridcolor="rgba(0,0,0,0)",
+            categoryorder="array",
+            categoryarray=data_df["Category"].tolist(),
+            # Explicitly set y-axis range to distribute bars evenly
+            range=[-0.5, num_categories - 0.5],
         ),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         showlegend=False,
-        margin=dict(l=0, r=0, t=10, b=10),  # Reduce margins to maximize bar space
+        margin=dict(l=2, r=2, t=2, b=2),  # Minimal margins
+        bargap=0.2,  # Consistent spacing between bars
+        # Remove all modebar buttons
         modebar_remove=[
             "toImage",
             "zoom",
@@ -156,17 +231,26 @@ def similarity_plot(sim_data):
             "autoScale",
             "resetScale",
         ],
+        # Ensure plot fills container
+        template="none",
     )
 
-    # Adjust the x-axis to accommodate percentage labels
-    fig.update_xaxes(
-        range=[-1.1, 1.1],
-        fixedrange=False,
-        showline=False,
-        zeroline=False,
-        showgrid=False,
-        gridcolor="rgba(0,0,0,0)",
-    )
+    # Configure responsive behavior
+    config = {
+        "displayModeBar": False,
+        "responsive": True,
+        "fillFrame": True,
+        "frameMargins": 0,
+        "displaylogo": False,
+        "modeBarButtonsToRemove": ["toImage"],
+        "toImageButtonOptions": {
+            "height": 295,
+            "width": None,
+        },
+    }
+
+    # Set the config on the figure object
+    fig._config = config
 
     return fig
 
