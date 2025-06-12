@@ -131,4 +131,5 @@ dmypy.json
 # Jetbrains
 .idea/
 .aider*
+.venv-wsl
 CLAUDE.local.md
