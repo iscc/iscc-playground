@@ -130,3 +130,5 @@ dmypy.json
 
 # Jetbrains
 .idea/
+.aider*
+CLAUDE.local.md
