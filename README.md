@@ -33,6 +33,7 @@ tasks. The algorithmic design supports content deduplication, database synchroni
 verification, timestamping, versioning, data provenance, similarity clustering, anomaly detection, usage
 tracking, allocation of royalties, fact-checking and general digital asset management use-cases.
 
+
 ## Project Status
 
 The ISCC is published as [ISO 24138:2024](https://www.iso.org/standard/77899.html) - International Standard
