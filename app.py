@@ -39,8 +39,23 @@ custom_css = """
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    height: 240px;        /* Fixed height */
+    height: 300px !important;        /* Fixed height for proper bar display */
     object-fit: contain;  /* Scale the content to fit within the element */
+}
+
+.iscc-unit-sim > div {
+    height: 100% !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.iscc-unit-sim .plotly {
+    height: 100% !important;
+    flex: 1;
+}
+
+.iscc-unit-sim .plotly > div {
+    height: 100% !important;
 }
 
 #chunked-text span.label {

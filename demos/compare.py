@@ -44,11 +44,15 @@ custom_css = """
 }
 
 .iscc-unit-sim {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    height: 120px;        /* Fixed height */
-    object-fit: contain;  /* Scale the content to fit within the element */
+    height: 300px !important;        /* Fixed height for proper bar display */
+}
+
+.iscc-unit-sim .js-plotly-plot {
+    height: 100% !important;
+}
+
+.iscc-unit-sim .plotly {
+    height: 100% !important;
 }
 
 .modebar-btn {
@@ -128,7 +132,7 @@ def similarity_plot(sim_data):
 
     # Update layout for aesthetics
     fig.update_layout(
-        height=len(sim_data) * 40,
+        height=280,  # Set explicit height for Gradio 5 compatibility
         autosize=True,
         xaxis=dict(
             title="",
@@ -142,6 +146,7 @@ def similarity_plot(sim_data):
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         showlegend=False,
+        margin=dict(l=0, r=0, t=10, b=10),  # Reduce margins to maximize bar space
         modebar_remove=[
             "toImage",
             "zoom",
