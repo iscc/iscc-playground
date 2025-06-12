@@ -3,11 +3,13 @@ title: ISCC - Playground
 emoji: ▶️
 colorFrom: red
 colorTo: blue
+python_version: 3.12
 sdk: gradio
 sdk_version: 4.44.1
-python_version: 3.12
 app_file: app.py
 pinned: true
+fullWidth: true
+header: default
 license: apache-2.0
 short_description: Explore the International Standard Content Code
 ---
