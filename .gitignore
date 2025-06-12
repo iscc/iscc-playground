@@ -134,3 +134,4 @@ dmypy.json
 .venv-wsl
 CLAUDE.local.md
 .claude
+requirements.txt
