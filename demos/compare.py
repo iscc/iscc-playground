@@ -140,12 +140,17 @@ def dist_to_sim(data, dim=64):
         if k == "instance_match":
             result[k.split("_")[0].title()] = 1.0 if v is True else -1.0
         else:
-            result[k.split("_")[0].title()] = hamming_to_cosine(v, dim)
+            result[k.split("_")[0].title()] = hamming_to_similarity(v, dim)
     return result
 
 
-def hamming_to_cosine(hamming_distance: int, dim: int) -> float:
-    """Aproximate the cosine similarity for a given hamming distance and dimension"""
+def hamming_to_similarity(hamming_distance: int, dim: int) -> float:
+    """Convert Hamming distance to a normalized similarity measure in range [-1, +1]"""
+    if dim == 0:
+        raise ValueError("Dimension must be greater than 0")
+    if hamming_distance < 0 or hamming_distance > dim:
+        raise ValueError(f"Hamming distance must be between 0 and {dim}")
+
     result = 1 - (2 * hamming_distance) / dim
     log.debug(f"Hamming distance: {hamming_distance} - Dim: {dim} - Result: {result}")
     return result
