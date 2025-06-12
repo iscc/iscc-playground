@@ -12,11 +12,36 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-        lfs: true
+        lfs: false  # Don't use LFS on GitHub side
         
-    - name: Push to Hugging Face
+    - name: Push to Hugging Face with LFS
       env:
         HF_TOKEN: ${{ secrets.HF_TOKEN }}
       run: |
-        git remote add space https://iscc:$HF_TOKEN@huggingface.co/spaces/iscc/iscc-playground
-        git push space main --force
+        # Configure git
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        
+        # Clone the Hugging Face space
+        git clone https://iscc:$HF_TOKEN@huggingface.co/spaces/iscc/iscc-playground hf-space || true
+        
+        # If clone failed (repo doesn't exist), create new directory
+        if [ ! -d "hf-space" ]; then
+          mkdir hf-space
+          cd hf-space
+          git init
+          git remote add origin https://iscc:$HF_TOKEN@huggingface.co/spaces/iscc/iscc-playground
+          cd ..
+        fi
+        
+        # Copy all files except .git
+        rsync -av --exclude='.git' --exclude='hf-space' . hf-space/
+        
+        # Setup LFS in the HF repo
+        cd hf-space
+        git lfs install
+        git lfs track "*.jpg" "*.jpeg" "*.png" "*.gif" "*.bmp" "*.webp"
+        git add .gitattributes
+        git add .
+        git commit -m "Sync from GitHub" || true
+        git push origin main --force
