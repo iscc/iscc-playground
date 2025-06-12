@@ -18,30 +18,35 @@ jobs:
       env:
         HF_TOKEN: ${{ secrets.HF_TOKEN }}
       run: |
-        # Configure git
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
+        # Configure git globally
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git config --global init.defaultBranch main
         
-        # Clone the Hugging Face space
-        git clone https://iscc:$HF_TOKEN@huggingface.co/spaces/iscc/iscc-playground hf-space || true
-        
-        # If clone failed (repo doesn't exist), create new directory
-        if [ ! -d "hf-space" ]; then
+        # Clone the Hugging Face space with LFS
+        git lfs install
+        git clone https://iscc:$HF_TOKEN@huggingface.co/spaces/iscc/iscc-playground hf-space || {
+          echo "Clone failed, creating new repo"
           mkdir hf-space
           cd hf-space
           git init
+          git lfs install
           git remote add origin https://iscc:$HF_TOKEN@huggingface.co/spaces/iscc/iscc-playground
           cd ..
-        fi
+        }
         
-        # Copy all files except .git
-        rsync -av --exclude='.git' --exclude='hf-space' . hf-space/
-        
-        # Setup LFS in the HF repo
+        # Remove all files in HF space except .git
         cd hf-space
-        git lfs install
+        find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+        cd ..
+        
+        # Copy all files from GitHub to HF space
+        rsync -av --exclude='.git' --exclude='hf-space' --exclude='.github' . hf-space/
+        
+        # Setup LFS tracking and commit everything
+        cd hf-space
         git lfs track "*.jpg" "*.jpeg" "*.png" "*.gif" "*.bmp" "*.webp"
-        git add .gitattributes
-        git add .
-        git commit -m "Sync from GitHub" || true
-        git push origin main --force
+        git add -A
+        git status
+        git commit -m "Sync from GitHub: ${{ github.sha }}" || echo "No changes to commit"
+        git push origin main --force-with-lease || git push origin main --force
