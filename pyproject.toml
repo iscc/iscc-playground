@@ -18,6 +18,10 @@ dependencies = [
 dev = [
     "poethepoet>=0.35.0",
     "ruff",
+    "mdformat",
+    "mdformat-gfm",
+    "mdformat-gfm-alerts",
+    "mdformat_frontmatter",
 ]
 
 [tool.uv]
@@ -28,8 +32,9 @@ line-length = 112
 
 [tool.poe.tasks]
 format-code = { cmd = "uv run ruff format", help = "Code style formating with ruff" }
+format-markdown = { cmd = "uv run mdformat --wrap 112 --end-of-line lf .", help = "Markdown formating with mdformat" }
 sync-requirements = { cmd = "uv pip compile pyproject.toml -o requirements.txt", help = "Sync requirements.txt for huggingface spaces deployment"}
-all = ["format-code", "sync-requirements"]
+all = ["format-markdown", "format-code", "sync-requirements"]
 
 
 [build-system]
