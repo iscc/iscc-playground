@@ -9,7 +9,7 @@ license = "Apache-2.0"
 dependencies = [
     "gradio==5.33.2",
     "iscc-sdk==0.6.2",
-    "iscc-core==1.0.9",
+    "iscc-core==1.2.1",
     "iscc-sci==0.1.0",
     "plotly==5.22.0",
 ]
